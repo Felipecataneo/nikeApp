@@ -9,17 +9,19 @@ import {
   Pressable,
 } from 'react-native';
 import products from "../../assets/data/products";
-import { useSelector } from 'react-redux';
-
+import { useSelector, useDispatch } from 'react-redux';
+import { cartSlice } from '../store/cartSlice';
 import { useNavigation } from '@react-navigation/native';
 
 const ProductDetailsScreen = () => {
   const product = useSelector(state => state.products.selectedProduct);
+  const dispatch= useDispatch()
   const { width } = useWindowDimensions();
   const navigation = useNavigation()
 
   const addToCart = () => {
-    navigation.navigate('Cart')
+    dispatch(cartSlice.actions.addCartItem({product: product}))
+    
   }
 
   return (
