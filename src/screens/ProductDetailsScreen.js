@@ -7,28 +7,38 @@ import {
   Text,
   ScrollView,
   Pressable,
+  ActivityIndicator,
 } from 'react-native';
-import products from "../../assets/data/products";
+
 import { useSelector, useDispatch } from 'react-redux';
 import { cartSlice } from '../store/cartSlice';
-import { useNavigation } from '@react-navigation/native';
+import { useGetProductQuery } from '../store/apiSlice';
 
-const ProductDetailsScreen = () => {
-  const product = useSelector(state => state.products.selectedProduct);
-  const dispatch= useDispatch()
+const ProductDetailsScreen = ({ route }) => {
+  const id = route.params.id;
+
+  const { data, isLoading, error } = useGetProductQuery(id);
+  const product = data?.data;
+
+  const dispatch = useDispatch();
+
   const { width } = useWindowDimensions();
-  const navigation = useNavigation()
 
   const addToCart = () => {
-    dispatch(cartSlice.actions.addCartItem({product: product}))
-    
+    dispatch(cartSlice.actions.addCartItem({ product }));
+  };
+
+  if (isLoading) {
+    return <ActivityIndicator />;
+  }
+
+  if (error) {
+    return <Text>Error fetching the product. {error.error}</Text>;
   }
 
   return (
     <View>
-      
       <ScrollView>
-        
         {/* Image Carousel */}
         <FlatList
           data={product.images}
@@ -94,8 +104,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 16,
   },
-
 });
 
 export default ProductDetailsScreen;
-

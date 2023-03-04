@@ -1,9 +1,13 @@
-import { FlatList, View, StyleSheet, Text, Pressable } from 'react-native';
+import { FlatList, View, StyleSheet, Text, Pressable, ActivityIndicator,Alert } from 'react-native';
 import React from 'react';
 
 import CartListItem from '../components/CartListItem';
-import { useSelector } from 'react-redux';
-import { selectDeliveryPrice, selectSubTotal, selectTotal } from '../store/cartSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { selectDeliveryPrice, selectSubTotal, selectTotal, cartSlice } from '../store/cartSlice';
+import {
+  useCreateOrderMutation
+} from '../store/apiSlice';
+
 
 
 const ShoppingCartTotals = () => {
@@ -30,7 +34,38 @@ const ShoppingCartTotals = () => {
 };
 
 const ShoppingCart = () => {
+  const subtotal =useSelector(selectSubTotal);
+  const deliveryFee = useSelector(selectDeliveryPrice);
+  const total = useSelector(selectTotal)
   const cartItems = useSelector(state => state.cart.items);
+  const dispatch = useDispatch();
+
+  const [createOrder, { data, error, isLoading }] = useCreateOrderMutation();
+
+  
+
+  const onCreateOrder = async () => {
+    const result = await createOrder({
+      items: cartItems,
+      subtotal,
+      deliveryFee,
+      total,
+      customer: {
+        name: 'Vadim',
+        address: 'My home',
+        email: 'vadim@notjust.dev',
+      },
+    });
+
+    if (result.data?.status === 'OK') {
+      Alert.alert(
+        'Order has been submitted',
+        `Your order reference is: ${result.data.data.ref}`
+      );
+      dispatch(cartSlice.actions.clear());
+    }
+  };
+
   return (
     <>
       <FlatList
@@ -39,8 +74,11 @@ const ShoppingCart = () => {
         ListFooterComponent={ShoppingCartTotals}
         scrollEnabled
       />
-      <Pressable style={styles.button}>
-        <Text style={styles.buttonText}>Checkout</Text>
+      <Pressable onPress={onCreateOrder} style={styles.button}>
+        <Text style={styles.buttonText}>
+          Checkout
+          {isLoading && <ActivityIndicator/>}          
+        </Text>
       </Pressable>
     </>
   )
